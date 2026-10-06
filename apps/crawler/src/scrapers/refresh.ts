@@ -2,49 +2,28 @@ import type { RefreshResult } from "@mf-dashboard/db/types";
 import { mfUrls } from "@mf-dashboard/meta/urls";
 import type { Page } from "playwright";
 import { debug, info, warn } from "../logger.js";
+import { navigateWithRetry } from "./navigation.js";
 
 const DEFAULT_MAX_WAIT_MINUTES = 20;
 const POLL_INTERVAL_MS = 30000; // 30 seconds
-const NAVIGATION_RETRY_DELAY_MS = 1000;
-const NAVIGATION_TIMEOUT_MS = 60000;
-
-interface NavigationOptions {
-  retryDelayMs?: number;
-}
-
-function isRetryableNavigationError(error: unknown): boolean {
-  const message = error instanceof Error ? error.message : String(error);
-  return message.includes("net::ERR_ABORTED") || message.includes("Timeout");
-}
+const IN_APP_MESSAGE_ROOT_SELECTOR = ".ab-iam-root.ab-show";
+const IN_APP_MESSAGE_FRAME_SELECTOR =
+  'iframe[title="Modal Message"], iframe.ab-in-app-message';
+const IN_APP_MESSAGE_CLOSE_SELECTORS = [
+  '[aria-label="Close"]',
+  '[aria-label="close"]',
+  '[aria-label="閉じる"]',
+  ".ab-close-button",
+  ".ab-close",
+  'button:has-text("×")',
+  'button:has-text("閉じる")',
+];
 
 export async function navigateToAccountsPage(
   page: Page,
-  options: NavigationOptions = {},
+  options: { retryDelayMs?: number } = {},
 ): Promise<void> {
-  const MAX_RETRIES = 1;
-  const retryDelayMs = options.retryDelayMs ?? NAVIGATION_RETRY_DELAY_MS;
-
-  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-    try {
-      await page.goto(mfUrls.accounts, {
-        waitUntil: "domcontentloaded",
-        timeout: NAVIGATION_TIMEOUT_MS,
-      });
-      return;
-    } catch (err) {
-      if (page.isClosed()) {
-        throw err;
-      }
-
-      if (!isRetryableNavigationError(err) || attempt === MAX_RETRIES) {
-        throw err;
-      }
-
-      // A crashed Playwright page can reject page.waitForTimeout() and mask the
-      // original navigation error. Use a process timer between attempts instead.
-      await new Promise((resolve) => setTimeout(resolve, retryDelayMs));
-    }
-  }
+  await navigateWithRetry(page, mfUrls.accounts, options);
 }
 
 export async function getRefreshStatus(
@@ -117,6 +96,52 @@ export function getMaxWaitMinutes(env: NodeJS.ProcessEnv = process.env): number 
     : DEFAULT_MAX_WAIT_MINUTES;
 }
 
+export async function dismissInAppMessage(page: Page): Promise<void> {
+  const modalRoot = page.locator(IN_APP_MESSAGE_ROOT_SELECTOR);
+  if (!(await modalRoot.first().isVisible().catch(() => false))) {
+    return;
+  }
+
+  debug("Dismissing in-app message overlay...");
+
+  for (const selector of IN_APP_MESSAGE_CLOSE_SELECTORS) {
+    const closeButton = page
+      .frameLocator(IN_APP_MESSAGE_FRAME_SELECTOR)
+      .locator(selector)
+      .first();
+    const clicked = await closeButton
+      .click({ timeout: 1000 })
+      .then(() => true)
+      .catch(() => false);
+
+    if (!clicked) {
+      continue;
+    }
+
+    await modalRoot
+      .first()
+      .waitFor({ state: "hidden", timeout: 2000 })
+      .catch(() => undefined);
+
+    if (!(await modalRoot.first().isVisible().catch(() => false))) {
+      return;
+    }
+  }
+
+  warn("In-app message overlay could not be closed; hiding it before refresh click");
+  await modalRoot.evaluateAll((elements) => {
+    for (const element of elements) {
+      if (!(element instanceof HTMLElement)) {
+        continue;
+      }
+
+      element.style.display = "none";
+      element.style.pointerEvents = "none";
+      element.setAttribute("data-mf-dashboard-dismissed", "true");
+    }
+  });
+}
+
 export async function clickRefreshButton(
   page: Page,
   options: RefreshOptions = {},
@@ -129,6 +154,7 @@ export async function clickRefreshButton(
   // Navigate to home and click refresh button
   await page.goto(mfUrls.home);
   await page.waitForLoadState("networkidle");
+  await dismissInAppMessage(page);
 
   const refreshButton = page.locator('a:has-text("一括更新")').first();
   await refreshButton.click();

@@ -121,6 +121,7 @@ async function streamCrawlerState(
   let heartbeat: ReturnType<typeof setInterval> | null = null;
   let requestedVersion = 0;
   let sentVersion = -1;
+  let lastSentState: string | null = null;
   let sending = false;
 
   const close = () => {
@@ -142,7 +143,11 @@ async function streamCrawlerState(
         const version = requestedVersion;
         const state = await getState();
         if (!closed) {
-          response.write(`data: ${JSON.stringify(state)}\n\n`);
+          const serializedState = JSON.stringify(state);
+          if (serializedState !== lastSentState) {
+            response.write(`data: ${serializedState}\n\n`);
+            lastSentState = serializedState;
+          }
           sentVersion = version;
         }
       }

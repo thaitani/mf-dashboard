@@ -269,85 +269,51 @@ describe("crawler run lock", () => {
     });
   });
 
-  test("allows acquisition to wait for an idle status check", async () => {
-    let markStatusGuardAcquired: () => void;
-    const statusGuardAcquired = new Promise<void>((resolve) => {
-      markStatusGuardAcquired = resolve;
-    });
-    let finishStatusCheck!: () => void;
-    const statusMayFinish = new Promise<void>((resolve) => {
-      finishStatusCheck = resolve;
-    });
-    const statePromise = getCrawlerRunState({
+  test("does not acquire a mutation guard for an idle status check", async () => {
+    const state = await getCrawlerRunState({
       afterLockMutationGuardAcquired: async () => {
-        markStatusGuardAcquired();
-        await statusMayFinish;
+        throw new Error("idle status should not acquire a mutation guard");
       },
       lockPath,
     });
-    await statusGuardAcquired;
-
-    let markAcquisitionBlocked: () => void;
-    const acquisitionBlocked = new Promise<void>((resolve) => {
-      markAcquisitionBlocked = resolve;
-    });
-    const lockPromise = acquireCrawlerRunLock("manual", {
-      afterLockMutationGuardBlocked: async () => markAcquisitionBlocked(),
-      lockPath,
-    });
-    await acquisitionBlocked;
-    finishStatusCheck();
-
-    await expect(statePromise).resolves.toEqual({
-      running: false,
-      pid: null,
-      source: null,
-      startedAt: null,
-    });
-    const lock = await lockPromise;
-    expect(lock.record.source).toBe("manual");
-    await lock.release();
-  });
-
-  test("waits for a concurrent idle status check instead of reporting an unknown run", async () => {
-    let markFirstGuardAcquired!: () => void;
-    const firstGuardAcquired = new Promise<void>((resolve) => {
-      markFirstGuardAcquired = resolve;
-    });
-    let releaseFirstGuard!: () => void;
-    const firstGuardMayFinish = new Promise<void>((resolve) => {
-      releaseFirstGuard = resolve;
-    });
-    const firstState = getCrawlerRunState({
-      afterLockMutationGuardAcquired: async () => {
-        markFirstGuardAcquired();
-        await firstGuardMayFinish;
-      },
-      lockPath,
-    });
-    await firstGuardAcquired;
-
-    let markSecondGuardBlocked!: () => void;
-    const secondGuardBlocked = new Promise<void>((resolve) => {
-      markSecondGuardBlocked = resolve;
-    });
-    const secondState = getCrawlerRunState({
-      afterLockMutationGuardBlocked: async () => markSecondGuardBlocked(),
-      lockPath,
-    });
-    await secondGuardBlocked;
-    releaseFirstGuard();
-
     const expectedIdleState = {
       running: false,
       pid: null,
       source: null,
       startedAt: null,
     };
-    await expect(Promise.all([firstState, secondState])).resolves.toEqual([
-      expectedIdleState,
-      expectedIdleState,
-    ]);
+    expect(state).toEqual(expectedIdleState);
+
+    const lock = await acquireCrawlerRunLock("manual", { lockPath });
+    expect(lock.record.source).toBe("manual");
+    await lock.release();
+  });
+
+  test("does not acquire a mutation guard for a terminal status check", async () => {
+    const statePath = `${lockPath}.state`;
+    const finishedState = {
+      version: 1 as const,
+      runId: "finished-run",
+      source: "scheduled",
+      startedAt: "2026-07-01T00:00:00.000Z",
+      finishedAt: "2026-07-01T00:01:00.000Z",
+      runStatus: "success" as const,
+      current: null,
+      progress: { completed: 1, total: 1 },
+      reason: null,
+      timeline: [],
+    };
+    await writeCrawlerRunState(finishedState, { statePath });
+
+    await expect(
+      getCrawlerRunState({
+        afterLockMutationGuardAcquired: async () => {
+          throw new Error("terminal status should not acquire a mutation guard");
+        },
+        lockPath,
+        statePath,
+      }),
+    ).resolves.toEqual({ ...finishedState, running: false, pid: null });
   });
 
   test("acquires when a mutation guard was left without a lock", async () => {

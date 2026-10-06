@@ -6,6 +6,7 @@ import { debug, warn } from "../logger.js";
 import { parseDecimalNumber, parseJapaneseNumber, parsePercentage } from "../parsers.js";
 import { extractAccountMfIdFromDetailUrl, isExpectedAccountDetailPage } from "./account-detail.js";
 import { createManualHoldingKey, type ManualHoldingAccountMap } from "./manual-holding-accounts.js";
+import { navigateWithRetry } from "./navigation.js";
 import {
   getScheduledWithdrawalStatus,
   type ScheduledWithdrawalStatus,
@@ -674,7 +675,7 @@ export async function getPortfolio(
   debug("Getting portfolio from /bs/portfolio page...");
 
   // Get official totalAssets from bs/history (more accurate than summing items)
-  await page.goto(mfUrls.assetHistory, { waitUntil: "domcontentloaded" });
+  await navigateWithRetry(page, mfUrls.assetHistory);
   // テーブルが表示されるまで待機
   await page.locator("table.table-bordered").waitFor({ state: "visible", timeout: 10000 });
 
@@ -689,7 +690,7 @@ export async function getPortfolio(
   }
 
   // Get individual items from bs/portfolio
-  await page.goto(mfUrls.portfolio, { waitUntil: "domcontentloaded" });
+  await navigateWithRetry(page, mfUrls.portfolio);
   // ポートフォリオコンテンツが表示されるまで待機
   await page.locator("h1.heading-normal").first().waitFor({ state: "visible", timeout: 10000 });
 

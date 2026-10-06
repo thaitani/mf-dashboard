@@ -54,6 +54,16 @@ async function listen(testServer: Server): Promise<string> {
   return `http://127.0.0.1:${address.port}`;
 }
 
+async function readWithTimeout(
+  reader: ReadableStreamDefaultReader<Uint8Array>,
+  timeoutMs = 100,
+): Promise<ReadableStreamReadResult<Uint8Array> | null> {
+  return Promise.race([
+    reader.read(),
+    new Promise<null>((resolve) => setTimeout(() => resolve(null), timeoutMs)),
+  ]);
+}
+
 describe("crawler trigger server", () => {
   test.each([
     ["crawler-run-state.json", true],
@@ -148,6 +158,38 @@ describe("crawler trigger server", () => {
 
     await reader.cancel();
     await vi.waitFor(() => expect(stopWatching).toHaveBeenCalledTimes(1));
+  });
+
+  test("does not stream duplicate crawler states", async () => {
+    let state = idleState;
+    let notifyChange = () => {};
+    const baseUrl = await listen(
+      createCrawlerTriggerServer({
+        getState: async () => state,
+        watchState: async (onChange) => {
+          notifyChange = onChange;
+          return () => {};
+        },
+      }),
+    );
+
+    const res = await fetch(`${baseUrl}/events`, { headers: authorizationHeaders });
+    const reader = res.body!.getReader();
+
+    await expect(reader.read()).resolves.toMatchObject({
+      value: expect.any(Uint8Array),
+      done: false,
+    });
+
+    notifyChange();
+    expect(await readWithTimeout(reader)).toBeNull();
+
+    state = runningState;
+    notifyChange();
+    const update = await reader.read();
+    expect(new TextDecoder().decode(update.value)).toContain(JSON.stringify(runningState));
+
+    await reader.cancel();
   });
 
   test("releases a watcher that finishes setup after the client disconnects", async () => {

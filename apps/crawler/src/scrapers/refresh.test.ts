@@ -1,6 +1,7 @@
 import type { Page } from "playwright";
 import { describe, expect, test, vi } from "vitest";
 import {
+  dismissInAppMessage,
   getMaxWaitMinutes,
   getRefreshStatus,
   navigateToAccountsPage,
@@ -111,6 +112,89 @@ describe("getRefreshStatus", () => {
       remainingCount: 1,
     });
     expect(firstCell.textContent).toHaveBeenCalledOnce();
+  });
+});
+
+describe("dismissInAppMessage", () => {
+  test("in-app messageが表示されていない場合は何もしない", async () => {
+    const modalRoot = {
+      first: vi.fn<() => { isVisible: () => Promise<boolean> }>().mockReturnValue({
+        isVisible: vi.fn<() => Promise<boolean>>().mockResolvedValue(false),
+      }),
+      evaluateAll: vi.fn<() => Promise<void>>(),
+    };
+    const page = {
+      locator: vi.fn<() => typeof modalRoot>().mockReturnValue(modalRoot),
+      frameLocator: vi.fn(),
+    } as unknown as Page;
+
+    await dismissInAppMessage(page);
+
+    expect(page.frameLocator).not.toHaveBeenCalled();
+    expect(modalRoot.evaluateAll).not.toHaveBeenCalled();
+  });
+
+  test("iframe内の閉じるボタンでin-app messageを閉じる", async () => {
+    const closeButton = {
+      click: vi.fn<() => Promise<void>>().mockResolvedValue(undefined),
+    };
+    const frameLocator = {
+      locator: vi.fn<() => { first: () => typeof closeButton }>().mockReturnValue({
+        first: vi.fn<() => typeof closeButton>().mockReturnValue(closeButton),
+      }),
+    };
+    const modalRootFirst = {
+      isVisible: vi
+        .fn<() => Promise<boolean>>()
+        .mockResolvedValueOnce(true)
+        .mockResolvedValueOnce(false),
+      waitFor: vi.fn<() => Promise<void>>().mockResolvedValue(undefined),
+    };
+    const modalRoot = {
+      first: vi.fn<() => typeof modalRootFirst>().mockReturnValue(modalRootFirst),
+      evaluateAll: vi.fn<() => Promise<void>>(),
+    };
+    const page = {
+      locator: vi.fn<() => typeof modalRoot>().mockReturnValue(modalRoot),
+      frameLocator: vi.fn<() => typeof frameLocator>().mockReturnValue(frameLocator),
+    } as unknown as Page;
+
+    await dismissInAppMessage(page);
+
+    expect(closeButton.click).toHaveBeenCalledWith({ timeout: 1000 });
+    expect(modalRootFirst.waitFor).toHaveBeenCalledWith({
+      state: "hidden",
+      timeout: 2000,
+    });
+    expect(modalRoot.evaluateAll).not.toHaveBeenCalled();
+  });
+
+  test("閉じるボタンで閉じられない場合はoverlayを非表示にする", async () => {
+    const closeButton = {
+      click: vi.fn<() => Promise<void>>().mockRejectedValue(new Error("not found")),
+    };
+    const frameLocator = {
+      locator: vi.fn<() => { first: () => typeof closeButton }>().mockReturnValue({
+        first: vi.fn<() => typeof closeButton>().mockReturnValue(closeButton),
+      }),
+    };
+    const modalRootFirst = {
+      isVisible: vi.fn<() => Promise<boolean>>().mockResolvedValue(true),
+      waitFor: vi.fn<() => Promise<void>>().mockResolvedValue(undefined),
+    };
+    const modalRoot = {
+      first: vi.fn<() => typeof modalRootFirst>().mockReturnValue(modalRootFirst),
+      evaluateAll: vi.fn<() => Promise<void>>().mockResolvedValue(undefined),
+    };
+    const page = {
+      locator: vi.fn<() => typeof modalRoot>().mockReturnValue(modalRoot),
+      frameLocator: vi.fn<() => typeof frameLocator>().mockReturnValue(frameLocator),
+    } as unknown as Page;
+
+    await dismissInAppMessage(page);
+
+    expect(closeButton.click).toHaveBeenCalled();
+    expect(modalRoot.evaluateAll).toHaveBeenCalledOnce();
   });
 });
 

@@ -3,13 +3,12 @@ import { mfUrls } from "@mf-dashboard/meta/urls";
 import type { Page } from "playwright";
 import { debug } from "../logger.js";
 import { parseJapaneseNumber } from "../parsers.js";
+import { navigateWithRetry } from "./navigation.js";
 
 export async function getAssetHistory(page: Page): Promise<AssetHistory> {
   debug("Getting asset history from /bs/history page...");
 
-  await page.goto(mfUrls.assetHistory, {
-    waitUntil: "domcontentloaded",
-  });
+  await navigateWithRetry(page, mfUrls.assetHistory);
   // テーブルが表示されるまで待機
   await page.locator("table.table-bordered").waitFor({ state: "visible", timeout: 10000 });
 
