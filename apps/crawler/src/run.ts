@@ -19,6 +19,7 @@ import {
   runCrawlerStep,
   type CrawlerProgressReporter,
 } from "./crawler-progress.js";
+import { backupDatabaseBeforeCrawlerRun } from "./db-backup.js";
 import { error, info, warn } from "./logger.js";
 import { createGroupScope } from "./scrapers/group.js";
 import { notifyWebRefresh } from "./web-refresh.js";
@@ -36,6 +37,8 @@ async function disposeGroupScope(
 }
 
 export async function runCrawler(progress: CrawlerProgressReporter): Promise<void> {
+  await backupDatabaseBeforeCrawlerRun();
+
   const config = runLoadPhase();
   let runtime: CrawlerRuntime | null = null;
 

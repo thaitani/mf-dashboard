@@ -10,6 +10,7 @@
     "build": "turbo build",
     "build:demo": "turbo build:demo",
     "generate:demo-insights": "pnpm --filter @mf-dashboard/analytics generate:demo-insights",
+    "db:backup": "tsx scripts/db-backup.ts",
     "db:clean": "rm -f data/moneyforward.db data/moneyforward.db-wal data/moneyforward.db-shm",
     "db:dev": "pnpm --filter @mf-dashboard/crawler dev:scrape",
     "test": "turbo test",

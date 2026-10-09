@@ -81,6 +81,8 @@ services:
       CLEANUP_GROUPS: ${CLEANUP_GROUPS:-}
       CRAWLER_HOST: 0.0.0.0
       DASHBOARD_URL: ${DASHBOARD_URL:-}
+      DB_BACKUP_DIR: ${DB_BACKUP_DIR:-/app/backups}
+      DB_BACKUP_KEEP: ${DB_BACKUP_KEEP:-}
       DEBUG: ${DEBUG:-}
       DISCORD_AVATAR_URL: ${DISCORD_AVATAR_URL:-}
       DISCORD_WEBHOOK_URL: ${DISCORD_WEBHOOK_URL:-}
@@ -104,6 +106,7 @@ services:
       WEB_URL: ${WEB_URL:-http://web:8765}
     volumes:
       - ./data:/app/data
+      - ${DB_BACKUP_HOST_DIR:-./backups}:${DB_BACKUP_DIR:-/app/backups}
       - crawler_auth_state:/app/crawler-state
     expose:
       - "8766"

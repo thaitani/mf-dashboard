@@ -15,11 +15,15 @@ import {
   runSetupPhase,
 } from "./crawler-phases.js";
 import { CRAWLER_STEPS, createCrawlerProgressReporter } from "./crawler-progress.js";
+import { backupDatabaseBeforeCrawlerRun } from "./db-backup.js";
 import { runCrawler } from "./run.js";
 import { createGroupScope } from "./scrapers/group.js";
 import { notifyWebRefresh } from "./web-refresh.js";
 
 vi.mock("@mf-dashboard/db", () => ({ closeDb: vi.fn<() => void>() }));
+vi.mock("./db-backup.js", () => ({
+  backupDatabaseBeforeCrawlerRun: vi.fn<() => Promise<void>>(),
+}));
 vi.mock("./crawler-phases.js", () => ({
   handleCrawlerFailure: vi.fn<() => void>(),
   runAnalyticsPhase: vi.fn<() => void>(),
@@ -39,6 +43,7 @@ let tempDir: string;
 
 beforeEach(async () => {
   vi.clearAllMocks();
+  vi.mocked(backupDatabaseBeforeCrawlerRun).mockResolvedValue(undefined);
   tempDir = await mkdtemp(path.join(os.tmpdir(), "crawler-run-progress-"));
   vi.mocked(runLoadPhase).mockReturnValue({
     skipRefresh: false,
@@ -121,6 +126,7 @@ describe("runCrawler progress", () => {
 
     await expect(runCrawler(progress)).rejects.toBe(authError);
 
+    expect(backupDatabaseBeforeCrawlerRun).toHaveBeenCalledOnce();
     expect(runScrapePhase).not.toHaveBeenCalled();
     expect(createGroupScope).not.toHaveBeenCalled();
     expect(handleCrawlerFailure).toHaveBeenCalledWith(
@@ -155,6 +161,7 @@ describe("runCrawler progress", () => {
     await runCrawler(progress);
     await progress.finish("success");
 
+    expect(backupDatabaseBeforeCrawlerRun).toHaveBeenCalledOnce();
     expect(progress.getState().runStatus).toBe("success");
     expect(progress.getState().timeline.map(({ step, status }) => ({ step, status }))).toEqual([
       { step: "authentication", status: "done" },

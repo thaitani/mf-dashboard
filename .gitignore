@@ -10,6 +10,7 @@ next-env.d.ts
 out/
 
 debug/
+backups/
 
 auth-state.json
 test-auth-state.json

@@ -9,7 +9,7 @@ ENV PNPM_HOME=/pnpm \
 
 RUN mkdir -p /pnpm \
     && corepack enable \
-    && apt-get update && apt-get install -y --no-install-recommends curl ca-certificates tini \
+    && apt-get update && apt-get install -y --no-install-recommends curl ca-certificates sqlite3 tini \
     && rm -rf /var/lib/apt/lists/*
 
 ARG SUPERCRONIC_VERSION=v0.2.30
