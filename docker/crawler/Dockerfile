@@ -1,4 +1,4 @@
-FROM node:24.20.0-bookworm-slim
+FROM node:24.22.1-bookworm-slim
 WORKDIR /app
 ENV PNPM_HOME=/pnpm \
     COREPACK_HOME=/pnpm/corepack \
@@ -12,9 +12,9 @@ RUN mkdir -p /pnpm \
     && apt-get update && apt-get install -y --no-install-recommends curl ca-certificates sqlite3 tini \
     && rm -rf /var/lib/apt/lists/*
 
-ARG SUPERCRONIC_VERSION=v0.2.30
-ARG SUPERCRONIC_SHA256_AMD64=55f3a65b6ef29856d948230a96448f6ec7376d39fca367fae49d2512167e29e5
-ARG SUPERCRONIC_SHA256_ARM64=21a665f278fd2feb95012df3d3e0de28df2d7968acd84eea47d732c521257974
+ARG SUPERCRONIC_VERSION=v0.2.51
+ARG SUPERCRONIC_SHA256_AMD64=cc232108374e8e2b537045f2d5eaa1229f619db314c3ba6a14d38b35dc0aa123
+ARG SUPERCRONIC_SHA256_ARM64=4ae22576a78223d8ccdf5f3b3660a5cbb5288416bf0ca96afc4a36d195932b94
 RUN arch="$(dpkg --print-architecture)" \
     && case "${arch}" in \
       amd64) supercronic_arch="amd64"; supercronic_sha256="${SUPERCRONIC_SHA256_AMD64}" ;; \

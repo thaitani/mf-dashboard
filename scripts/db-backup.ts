@@ -1,8 +1,8 @@
 import { execFile } from "node:child_process";
 import { constants, promises as fs } from "node:fs";
 import path from "node:path";
-import { promisify } from "node:util";
 import { fileURLToPath } from "node:url";
+import { promisify } from "node:util";
 
 const DEFAULT_DB_PATH = "data/moneyforward.db";
 const DEFAULT_BACKUP_DIR = "backups";
@@ -31,16 +31,8 @@ const execFileAsync = promisify(execFile);
 export function formatBackupTimestamp(date: Date): string {
   const pad = (value: number) => String(value).padStart(2, "0");
 
-  const datePart = [
-    date.getFullYear(),
-    pad(date.getMonth() + 1),
-    pad(date.getDate()),
-  ].join("");
-  const timePart = [
-    pad(date.getHours()),
-    pad(date.getMinutes()),
-    pad(date.getSeconds()),
-  ].join("");
+  const datePart = [date.getFullYear(), pad(date.getMonth() + 1), pad(date.getDate())].join("");
+  const timePart = [pad(date.getHours()), pad(date.getMinutes()), pad(date.getSeconds())].join("");
 
   return `${datePart}-${timePart}`;
 }
@@ -89,9 +81,7 @@ async function nextBackupPath(backupDir: string, timestamp: string): Promise<str
 
   for (let index = 0; index < 1000; index++) {
     const candidate =
-      index === 0
-        ? basePath
-        : path.join(backupDir, `${BACKUP_PREFIX}-${timestamp}-${index}.db`);
+      index === 0 ? basePath : path.join(backupDir, `${BACKUP_PREFIX}-${timestamp}-${index}.db`);
 
     try {
       await fs.access(candidate);
@@ -103,10 +93,7 @@ async function nextBackupPath(backupDir: string, timestamp: string): Promise<str
   throw new Error(`Could not find an available backup file name in ${backupDir}`);
 }
 
-async function pruneBackups(
-  backupDir: string,
-  keepCount: number | null,
-): Promise<string[]> {
+async function pruneBackups(backupDir: string, keepCount: number | null): Promise<string[]> {
   if (keepCount === null) {
     return [];
   }
@@ -115,15 +102,11 @@ async function pruneBackups(
   const backupFileNames = entries
     .filter((entry) => entry.isFile())
     .map((entry) => entry.name)
-    .filter((name) =>
-      /^moneyforward-\d{8}-\d{6}(?:-\d+)?\.db$/.test(name),
-    )
+    .filter((name) => /^moneyforward-\d{8}-\d{6}(?:-\d+)?\.db$/.test(name))
     .sort()
     .reverse();
 
-  const prunedPaths = backupFileNames
-    .slice(keepCount)
-    .map((name) => path.join(backupDir, name));
+  const prunedPaths = backupFileNames.slice(keepCount).map((name) => path.join(backupDir, name));
 
   await Promise.all(prunedPaths.map((filePath) => fs.unlink(filePath)));
 
@@ -135,23 +118,12 @@ function quoteSqliteString(value: string): string {
 }
 
 function isCommandNotFoundError(error: unknown): boolean {
-  return (
-    typeof error === "object" &&
-    error !== null &&
-    "code" in error &&
-    error.code === "ENOENT"
-  );
+  return typeof error === "object" && error !== null && "code" in error && error.code === "ENOENT";
 }
 
-async function backupWithSqlite(
-  sourcePath: string,
-  backupPath: string,
-): Promise<boolean> {
+async function backupWithSqlite(sourcePath: string, backupPath: string): Promise<boolean> {
   try {
-    await execFileAsync("sqlite3", [
-      sourcePath,
-      `VACUUM INTO ${quoteSqliteString(backupPath)};`,
-    ]);
+    await execFileAsync("sqlite3", [sourcePath, `VACUUM INTO ${quoteSqliteString(backupPath)};`]);
     return true;
   } catch (error) {
     if (isCommandNotFoundError(error)) {
@@ -162,9 +134,7 @@ async function backupWithSqlite(
   }
 }
 
-export async function backupDatabase(
-  options: BackupOptions,
-): Promise<BackupResult> {
+export async function backupDatabase(options: BackupOptions): Promise<BackupResult> {
   if (!(await isReadableFile(options.sourcePath))) {
     if (options.skipMissing) {
       return {
@@ -175,9 +145,7 @@ export async function backupDatabase(
       };
     }
 
-    throw new Error(
-      `Database file was not found or is not readable: ${options.sourcePath}`,
-    );
+    throw new Error(`Database file was not found or is not readable: ${options.sourcePath}`);
   }
 
   await fs.mkdir(options.backupDir, { recursive: true });

@@ -493,7 +493,12 @@ describe("ChatShell", () => {
 
     const { rerender } = render(<ChatShell />);
 
-    expect(screen.getByText("6月10日の支出は3,200円です。")).toBeTruthy();
+    expect(
+      screen.getByText(
+        (_content, element) => element?.textContent === "6月10日の支出は3,200円です。",
+        { selector: "p" },
+      ),
+    ).toBeTruthy();
 
     chatState.isSubmitting = false;
     rerender(<ChatShell />);

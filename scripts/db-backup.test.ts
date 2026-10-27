@@ -13,18 +13,14 @@ import {
 const tempDirs: string[] = [];
 
 async function createTempDir(): Promise<string> {
-  const tempDir = await fs.mkdtemp(
-    path.join(os.tmpdir(), "mf-dashboard-backup-"),
-  );
+  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "mf-dashboard-backup-"));
   tempDirs.push(tempDir);
   return tempDir;
 }
 
 afterEach(async () => {
   await Promise.all(
-    tempDirs
-      .splice(0)
-      .map((tempDir) => fs.rm(tempDir, { recursive: true, force: true })),
+    tempDirs.splice(0).map((tempDir) => fs.rm(tempDir, { recursive: true, force: true })),
   );
 });
 
@@ -111,9 +107,7 @@ describe("backupDatabase", () => {
     const backupPath = result.backupPath;
     expect(backupPath).toBe(path.join(backupDir, "moneyforward-20261006-171855.db"));
     if (backupPath === null) throw new Error("Expected backup path");
-    await expect(fs.readFile(backupPath, "utf8")).resolves.toBe(
-      "database content",
-    );
+    await expect(fs.readFile(backupPath, "utf8")).resolves.toBe("database content");
     expect(result.prunedPaths).toEqual([]);
     expect(result.method).toBe("copy");
   });
@@ -124,10 +118,7 @@ describe("backupDatabase", () => {
     const backupDir = path.join(tempDir, "backups");
     await fs.mkdir(backupDir);
     await fs.writeFile(sourcePath, "new database content");
-    await fs.writeFile(
-      path.join(backupDir, "moneyforward-20261006-171855.db"),
-      "old content",
-    );
+    await fs.writeFile(path.join(backupDir, "moneyforward-20261006-171855.db"), "old content");
 
     const result = await backupDatabase({
       backupDir,
@@ -139,13 +130,9 @@ describe("backupDatabase", () => {
     });
 
     const backupPath = result.backupPath;
-    expect(backupPath).toBe(
-      path.join(backupDir, "moneyforward-20261006-171855-1.db"),
-    );
+    expect(backupPath).toBe(path.join(backupDir, "moneyforward-20261006-171855-1.db"));
     if (backupPath === null) throw new Error("Expected backup path");
-    await expect(fs.readFile(backupPath, "utf8")).resolves.toBe(
-      "new database content",
-    );
+    await expect(fs.readFile(backupPath, "utf8")).resolves.toBe("new database content");
   });
 
   test("prunes older backup files when keep count is configured", async () => {
@@ -154,14 +141,8 @@ describe("backupDatabase", () => {
     const backupDir = path.join(tempDir, "backups");
     await fs.mkdir(backupDir);
     await fs.writeFile(sourcePath, "current database content");
-    await fs.writeFile(
-      path.join(backupDir, "moneyforward-20261003-000000.db"),
-      "old",
-    );
-    await fs.writeFile(
-      path.join(backupDir, "moneyforward-20261004-000000.db"),
-      "middle",
-    );
+    await fs.writeFile(path.join(backupDir, "moneyforward-20261003-000000.db"), "old");
+    await fs.writeFile(path.join(backupDir, "moneyforward-20261004-000000.db"), "middle");
 
     const result = await backupDatabase({
       backupDir,

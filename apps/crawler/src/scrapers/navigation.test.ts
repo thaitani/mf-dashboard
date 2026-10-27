@@ -31,9 +31,9 @@ describe("navigateWithRetry", () => {
     const goto = vi.fn<Page["goto"]>().mockRejectedValueOnce(error);
     const page = createPage(goto);
 
-    await expect(
-      navigateWithRetry(page, "https://example.test", { retryDelayMs: 0 }),
-    ).rejects.toBe(error);
+    await expect(navigateWithRetry(page, "https://example.test", { retryDelayMs: 0 })).rejects.toBe(
+      error,
+    );
 
     expect(goto).toHaveBeenCalledTimes(1);
   });
@@ -43,9 +43,9 @@ describe("navigateWithRetry", () => {
     const goto = vi.fn<Page["goto"]>().mockRejectedValueOnce(error);
     const page = createPage(goto, true);
 
-    await expect(
-      navigateWithRetry(page, "https://example.test", { retryDelayMs: 0 }),
-    ).rejects.toBe(error);
+    await expect(navigateWithRetry(page, "https://example.test", { retryDelayMs: 0 })).rejects.toBe(
+      error,
+    );
 
     expect(goto).toHaveBeenCalledTimes(1);
   });

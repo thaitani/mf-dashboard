@@ -24,6 +24,7 @@ debug
 .env.*
 !.env.example
 data/*
+backups/
 secrets/*
 apps/crawler/tests/e2e/*.db
 apps/crawler/tests/e2e/*.db-shm

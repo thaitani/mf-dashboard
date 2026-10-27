@@ -7,8 +7,7 @@ import { navigateWithRetry } from "./navigation.js";
 const DEFAULT_MAX_WAIT_MINUTES = 20;
 const POLL_INTERVAL_MS = 30000; // 30 seconds
 const IN_APP_MESSAGE_ROOT_SELECTOR = ".ab-iam-root.ab-show";
-const IN_APP_MESSAGE_FRAME_SELECTOR =
-  'iframe[title="Modal Message"], iframe.ab-in-app-message';
+const IN_APP_MESSAGE_FRAME_SELECTOR = 'iframe[title="Modal Message"], iframe.ab-in-app-message';
 const IN_APP_MESSAGE_CLOSE_SELECTORS = [
   '[aria-label="Close"]',
   '[aria-label="close"]',
@@ -98,17 +97,19 @@ export function getMaxWaitMinutes(env: NodeJS.ProcessEnv = process.env): number 
 
 export async function dismissInAppMessage(page: Page): Promise<void> {
   const modalRoot = page.locator(IN_APP_MESSAGE_ROOT_SELECTOR);
-  if (!(await modalRoot.first().isVisible().catch(() => false))) {
+  if (
+    !(await modalRoot
+      .first()
+      .isVisible()
+      .catch(() => false))
+  ) {
     return;
   }
 
   debug("Dismissing in-app message overlay...");
 
   for (const selector of IN_APP_MESSAGE_CLOSE_SELECTORS) {
-    const closeButton = page
-      .frameLocator(IN_APP_MESSAGE_FRAME_SELECTOR)
-      .locator(selector)
-      .first();
+    const closeButton = page.frameLocator(IN_APP_MESSAGE_FRAME_SELECTOR).locator(selector).first();
     const clicked = await closeButton
       .click({ timeout: 1000 })
       .then(() => true)
@@ -123,7 +124,12 @@ export async function dismissInAppMessage(page: Page): Promise<void> {
       .waitFor({ state: "hidden", timeout: 2000 })
       .catch(() => undefined);
 
-    if (!(await modalRoot.first().isVisible().catch(() => false))) {
+    if (
+      !(await modalRoot
+        .first()
+        .isVisible()
+        .catch(() => false))
+    ) {
       return;
     }
   }

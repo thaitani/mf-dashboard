@@ -10,22 +10,74 @@ allowBuilds:
   workerd: true
 
 minimumReleaseAgeExclude:
-  - "@storybook/addon-a11y@10.5.5"
-  - "@storybook/addon-vitest@10.5.5"
-  - "@storybook/builder-vite@10.5.5"
+  - "@storybook/addon-a11y@10.5.5 || 10.6.4"
+  - "@storybook/addon-vitest@10.5.5 || 10.6.4"
+  - "@storybook/builder-vite@10.5.5 || 10.6.4"
   - "@storybook/csf-plugin@10.5.5"
-  - "@storybook/nextjs-vite@10.5.5"
-  - "@storybook/react@10.5.5"
-  - "@storybook/react-dom-shim@10.5.5"
-  - "@storybook/react-vite@10.5.5"
-  - storybook@10.5.5
+  - "@storybook/nextjs-vite@10.5.5 || 10.6.4"
+  - "@storybook/react@10.5.5 || 10.6.4"
+  - "@storybook/react-dom-shim@10.5.5 || 10.6.4"
+  - "@storybook/react-vite@10.5.5 || 10.6.4"
+  - storybook@10.5.5 || 10.6.4
+  - "@ai-sdk/anthropic@4.0.89"
+  - "@ai-sdk/gateway@4.0.127"
+  - "@ai-sdk/google@4.0.106"
+  - "@ai-sdk/mcp@2.0.85"
+  - "@ai-sdk/openai@4.0.103"
+  - "@ai-sdk/provider-utils@5.0.69"
+  - "@ai-sdk/react@4.0.158"
+  - "@oxfmt/binding-android-arm-eabi@0.75.0"
+  - "@oxfmt/binding-android-arm64@0.75.0"
+  - "@oxfmt/binding-darwin-arm64@0.75.0"
+  - "@oxfmt/binding-darwin-x64@0.75.0"
+  - "@oxfmt/binding-freebsd-x64@0.75.0"
+  - "@oxfmt/binding-linux-arm-gnueabihf@0.75.0"
+  - "@oxfmt/binding-linux-arm-musleabihf@0.75.0"
+  - "@oxfmt/binding-linux-arm64-gnu@0.75.0"
+  - "@oxfmt/binding-linux-arm64-musl@0.75.0"
+  - "@oxfmt/binding-linux-ppc64-gnu@0.75.0"
+  - "@oxfmt/binding-linux-riscv64-gnu@0.75.0"
+  - "@oxfmt/binding-linux-riscv64-musl@0.75.0"
+  - "@oxfmt/binding-linux-s390x-gnu@0.75.0"
+  - "@oxfmt/binding-linux-x64-gnu@0.75.0"
+  - "@oxfmt/binding-linux-x64-musl@0.75.0"
+  - "@oxfmt/binding-openharmony-arm64@0.75.0"
+  - "@oxfmt/binding-win32-arm64-msvc@0.75.0"
+  - "@oxfmt/binding-win32-ia32-msvc@0.75.0"
+  - "@oxfmt/binding-win32-x64-msvc@0.75.0"
+  - "@oxlint/binding-android-arm-eabi@1.90.0"
+  - "@oxlint/binding-android-arm64@1.90.0"
+  - "@oxlint/binding-darwin-arm64@1.90.0"
+  - "@oxlint/binding-darwin-x64@1.90.0"
+  - "@oxlint/binding-freebsd-x64@1.90.0"
+  - "@oxlint/binding-linux-arm-gnueabihf@1.90.0"
+  - "@oxlint/binding-linux-arm-musleabihf@1.90.0"
+  - "@oxlint/binding-linux-arm64-gnu@1.90.0"
+  - "@oxlint/binding-linux-arm64-musl@1.90.0"
+  - "@oxlint/binding-linux-ppc64-gnu@1.90.0"
+  - "@oxlint/binding-linux-riscv64-gnu@1.90.0"
+  - "@oxlint/binding-linux-riscv64-musl@1.90.0"
+  - "@oxlint/binding-linux-s390x-gnu@1.90.0"
+  - "@oxlint/binding-linux-x64-gnu@1.90.0"
+  - "@oxlint/binding-linux-x64-musl@1.90.0"
+  - "@oxlint/binding-openharmony-arm64@1.90.0"
+  - "@oxlint/binding-win32-arm64-msvc@1.90.0"
+  - "@oxlint/binding-win32-ia32-msvc@1.90.0"
+  - "@oxlint/binding-win32-x64-msvc@1.90.0"
+  - ai@7.0.154
+  - lucide-react@1.62.0
+  - miniflare@5.20261023.0-beta
+  - oxfmt@0.75.0
+  - oxlint@1.90.0
+  - vite-plugin-storybook-nextjs@10.6.4
+  - wrangler@4.153.0
 
 catalog:
   "@libsql/client": 0.18.0
-  "@types/node": 25.9.5
-  "@vitest/browser-playwright": 5.0.0
-  drizzle-orm: 0.45.2
-  playwright: 1.62.1
-  playwright-core: 1.62.1
+  "@types/node": 26.6.5
+  "@vitest/browser-playwright": 5.0.5
+  drizzle-orm: 0.45.4
+  playwright: 1.64.1
+  playwright-core: 1.64.1
   typescript: 7.0.2
-  vitest: 5.0.0
+  vitest: 5.0.5
